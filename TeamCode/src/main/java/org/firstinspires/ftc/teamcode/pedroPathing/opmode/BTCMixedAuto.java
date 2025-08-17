@@ -24,7 +24,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 
 @Config
-@Autonomous (name = "MixedAuto", group = "AAA", preselectTeleOp = "AutoArmop"
+@Autonomous (name = "MixedAuto", group = "AAA", preselectTeleOp = "BTCo p"
 )
 public class BTCMixedAuto extends BTCLibrary {
     private Telemetry telemetryA;
@@ -163,7 +163,7 @@ public class BTCMixedAuto extends BTCLibrary {
         follower.setStartingPose(new Pose(0, 6));
         backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
         backwards.setConstantHeadingInterpolation(0);
-        score1 = new Path(new BezierLine(new Point(0, 6, Point.CARTESIAN), new Point(35, 16.5, Point.CARTESIAN)));
+        score1 = new Path(new BezierLine(new Point(0, 6, Point.CARTESIAN), new Point(36, 16.5, Point.CARTESIAN)));
         score1.setConstantHeadingInterpolation(0);
         score2 = new Path(new BezierCurve(new Point(4, -18.5, Point.CARTESIAN), new Point(9.1, 0, Point.CARTESIAN), new Point(12.3, 10, Point.CARTESIAN), new Point(23.3, 12, Point.CARTESIAN), new Point(36, 14.2, Point.CARTESIAN)));
         score2.setConstantHeadingInterpolation(0);
@@ -241,6 +241,7 @@ public class BTCMixedAuto extends BTCLibrary {
     @Override
     public void loop() {
         follower.telemetryDebug(telemetryA);
+        first();
         if(a == 0){
             a = 1;
             armtarget = 732;
@@ -271,7 +272,11 @@ public class BTCMixedAuto extends BTCLibrary {
         if(one == 1) {
             if ((forward == 1 || forward == 9 || forward == 9.5 || forward == 20)) {
                 if (follower.getPose().getX() > 20 && follower.getPose().getX() < 25) {
-                    follower.setMaxPower(.6);
+                    if(forward == 1){
+                        follower.setMaxPower(.3);
+                    }else {
+                        follower.setMaxPower(.6);
+                    }
                 }
             } else {
                 follower.setMaxPower(1);
@@ -297,14 +302,15 @@ public class BTCMixedAuto extends BTCLibrary {
                     twistpose = .56;
                 }
             }
-            if (follower.atParametricEnd() || !follower.isBusy() || ((forward == 1 || forward == 9) && follower.getVelocity().getXComponent() <= 4 && follower.getPose().getX() > 28)) {
+            if (follower.atParametricEnd() || !follower.isBusy() || ((forward == 1 || forward == 9) && follower.getVelocity().getXComponent() <= 2 && follower.getPose().getX() > 32)) {
                 if (forward < 8) {
                     if (forward == 1) {
                         first_score = 2;
-                        if (follower.getVelocity().getXComponent() <= 4) {
+                        if (follower.getVelocity().getXComponent() <= 2) {
                             follower.breakFollowing();
+                            follower.setMaxPower(1);
                             follower.holdPoint(new Pose(follower.getPose().getX() + 1, follower.getPose().getY()));
-                            pic = 2;
+                            pic = 2.5;
                             if(feed_machines) {
                                 multipick = 2;
                             }
@@ -445,13 +451,16 @@ public class BTCMixedAuto extends BTCLibrary {
                 flippose = .025;
                 twistpose = .56;
             }
-            if (follower.getPose().getY() < -32 && follower.getPose().getX() < 20 && one == 2) {
+            if(follower.getPose().getY() < -41 && follower.getPose().getX() < 20 && one == 3){
+                follower.setMaxPower(1);
+            }
+            else if (follower.getPose().getY() < -30 && follower.getPose().getX() < 22 && one == 2) {
                 slideservopose = .18;
                 intake_turret_pos = .6;
                 intake_vertical_pos = .025;
                 intake_twist_pos = .5;
                 gripspinny.setPower(-1);
-                follower.setMaxPower(1);
+                follower.setMaxPower(.5);
                 one = 3;
             }
 
@@ -520,6 +529,7 @@ public class BTCMixedAuto extends BTCLibrary {
     public void fastpick(){
         if(pic == 4.5 && one == 4){
             human_player = 2;
+            follower.holdPoint(new Pose(follower.getPose().getX() - 2, follower.getPose().getY()));
             one = 5;
         }else if(one == 5 && human_player == 1){
             pic = 2.5;

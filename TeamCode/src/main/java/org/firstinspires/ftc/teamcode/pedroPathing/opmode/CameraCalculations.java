@@ -1,14 +1,20 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.opmode;
 
-public class CameraCalculations {
+import static java.lang.Math.abs;
 
+import com.acmerobotics.dashboard.config.Config;
+
+@Config
+public class CameraCalculations {
+    @Config
     public static class ArmControl {
 
         public double H_C = 13;
-        private static final double MID_POSITION = 0.485;
+        private static double MID_POSITION = 0.5;
         private static final double TICKS_IN_ROTATION = 1 / 327.2727272;
         private static final double MAX_ROTATION = 327.27272727272;
-        public static double GRIPPER_STICK_OUT = 11.35;
+        public static double GRIPPER_STICK_OUT = 8;
+        public static double GRIPPER_OFFSET = .5;
         private static final double SLIDE_INCH_PER_TICK = 10.25 / MID_POSITION;
 
         public double[] armpick(double x, double y, double blockAngle) {
@@ -23,7 +29,6 @@ public class CameraCalculations {
             if (tempAngle > 90) {
                 tempAngle = 180 - tempAngle;
             }
-
             blockAngle += ((x / 7) * (tempAngle / 90) * 12);
             blockAngle += 90;
             if (blockAngle > 180) {
@@ -31,23 +36,22 @@ public class CameraCalculations {
             } else if (blockAngle < 0) {
                 blockAngle = 0 + blockAngle;
             }
-
+            double offset = GRIPPER_STICK_OUT;
             double angle = 1;
             double twist;
 
-            if (x > GRIPPER_STICK_OUT) {
+            if (abs(x) > offset) {
                 moveOn = true;
             } else {
-                angle = x / GRIPPER_STICK_OUT * 90 + 90;
-                double cameraDistanceFromBase = 2.75;
+                angle = x / (offset) * 90 + 90;
+                double cameraDistanceFromBase = 0;
                 y += cameraDistanceFromBase;
-
                 double slideMove = 0;
 
                 angle = (MAX_ROTATION / 2) - (90 - angle);
                 twist = (blockAngle - 90) * TICKS_IN_ROTATION + 0.49;
                 double originalAngle = angle;
-                angle = x / GRIPPER_STICK_OUT * 90 * TICKS_IN_ROTATION + MID_POSITION;
+                angle = Math.toDegrees(Math.atan(x / Math.sqrt(GRIPPER_STICK_OUT * GRIPPER_STICK_OUT - x * x))) * TICKS_IN_ROTATION + MID_POSITION;
                 twist -= angle - MID_POSITION;
 
                 if (twist < 0.21) {
@@ -55,21 +59,9 @@ public class CameraCalculations {
                 } else if (twist > 0.77) {
                     twist = 0.21 + (twist - 0.77);
                 }
-                if(x > 0){
-                    y -= x/8 * 2.5;
-                }
-                if(x > 0 && y < 18){
-                    y += 1;
-                }
-                if(x < 0 && y < 20){
-                    y += .5
-                    ;
-                }
-                if(y >= 18){
-                    slideMove -= .5;
-                }
-                slideMove = y - ((GRIPPER_STICK_OUT) - Math.abs((angle - MID_POSITION) / TICKS_IN_ROTATION) / 90 * 8);
-                slideMove -= slideMove /  12;
+
+                slideMove = y - Math.sqrt(GRIPPER_STICK_OUT * GRIPPER_STICK_OUT - x * x);
+
 
                 if (!moveOn) {
                     slides = slideMove / SLIDE_INCH_PER_TICK;

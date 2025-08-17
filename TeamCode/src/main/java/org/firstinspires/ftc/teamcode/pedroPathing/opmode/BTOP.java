@@ -13,6 +13,7 @@ public class BTOP extends BTCLibrary {
     public void loop(){
         button1.button();
         button2.button();
+        first();
         if(button1.button != "" || button2.button != "" || abs (gamepad1.left_stick_y) > .1){
             tele_start = 1;
         }
@@ -24,7 +25,7 @@ public class BTOP extends BTCLibrary {
             arm();
             safeflip();
             getwall();
-
+            wait_to_spit();
             drive();
 
             takepicture();

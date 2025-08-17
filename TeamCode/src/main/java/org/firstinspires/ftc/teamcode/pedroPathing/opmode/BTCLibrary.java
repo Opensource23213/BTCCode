@@ -40,6 +40,7 @@ public class BTCLibrary extends OpMode {
     /////////////////////////////////////////////////////
     //This is for the intake_turret variable
     public double multipick = 1;
+    public boolean first_multipick = false;
     public Servo intake_turret = null;
     public AnalogInput intake_turret_atpos = null;
     public double intake_turret_pos = .51;
@@ -171,6 +172,7 @@ public class BTCLibrary extends OpMode {
     public double pic = 1;
     public Limelight3A limelight = null;
     public Servo Light = null;
+    public Servo Light2 = null;
     public Servo AuditLight = null;
     public boolean pickred = false;
     public boolean pickblue = false;
@@ -179,6 +181,7 @@ public class BTCLibrary extends OpMode {
     public double forward = 1;
     public boolean has_picked = true;
     public boolean skibidyRizz = false;
+    public RevColorSensorV3 side = null;
 
     @Override
     public void init(){
@@ -210,10 +213,15 @@ public class BTCLibrary extends OpMode {
         //This is the limelight init
         limelight = hardwareMap.get(Limelight3A.class, "Limelight");
         Light = hardwareMap.get(Servo.class, "light");
+        Light2 = hardwareMap.get(Servo.class, "light2");
         AuditLight = hardwareMap.get(Servo.class, "auditlight");
+        side = hardwareMap.get(RevColorSensorV3.class, "color");
+        Light2.setPosition(1);
+        AuditLight.setPosition(.5);
         Light.setPosition(.5);
-        AuditLight.setPosition(0);
-        limelight.pipelineSwitch(5);
+        double hey = side.blue();
+        first_read = true;
+        first();
         limelight.start();
 
         ///////////////////////////////////////////////////
@@ -533,18 +541,28 @@ public class BTCLibrary extends OpMode {
                 slides.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 slidestarget = 0;
                 nowbutton = "";
+            }else if(scoring && skibidyRizz && flip.getPosition() < .55){
+                gripspinny.setPower(1);
+                scoring = false;
             }else if (nowbutton == "r2") {
                 armtarget = 732;
                 wristpose = .43;
                 slidestarget = 0;
                 flippose = .025;
                 flipsafe = 2;
+                Light2.setPosition(1);
+                AuditLight.setPosition(.5);
                 if(gripspinny.getPower() == -1){
                     spitting = 2;
                 }
+                follower.breakFollowing();
+                front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 intake_twist_pos = .49;
                 intake_turret_pos = .3;
-                limelight.pipelineSwitch(5);
+                first_read = true;
                 intake_vertical_pos = ready_pose;
                 gripper_pose = open;
                 slideservopose = 0;
@@ -557,10 +575,15 @@ public class BTCLibrary extends OpMode {
                 intake_vertical_pos = ready_pose;
                 gripper_pose = open;
             }else if (nowbutton == "l1") {
+                Light2.setPosition(0);
                 pic = 2;
+                lastbutton = "";
                 human_player = 1;
             }else if(nowbutton == "middle"){
                 skibidyRizz = true;
+                intake_turret_pos = .23;
+                slideservopose = 0;
+                intake_vertical_pos = .2;
                 gamepad2.setLedColor(0,255,0,999999999);
             }
             if(lastbutton == ""){
@@ -570,6 +593,11 @@ public class BTCLibrary extends OpMode {
                     twistpose = 0;
                     slidestarget = 0;
                     flippose = .583;
+                    intake_twist_pos = .49;
+                    intake_turret_pos = .3;
+                    pic = 1;
+                    gripper_pose = open;
+                    intake_vertical_pos = ready_pose;
                     Light.setPosition(0);
                     lastbutton = "l3";
                     nowbutton = "";
@@ -624,6 +652,7 @@ public class BTCLibrary extends OpMode {
                 }
 
             }else if(lastbutton == "a"){
+                AuditLight.setPosition(0);
                 if(nowbutton == "up"){
                     slideservopose = .7;
                 }else if(nowbutton == "down"){
@@ -640,6 +669,7 @@ public class BTCLibrary extends OpMode {
                     }
                 }else if(nowbutton == "a" && pic == 1){
                     pic = 4;
+                    AuditLight.setPosition(.5);
                     lastbutton = "";
                     manual_picking = true;
                 }
@@ -650,11 +680,12 @@ public class BTCLibrary extends OpMode {
                         wristpose = .45;
                         slidestarget = 300;
                         flippose = .61;
-                        gripspinny.setPower(1);
+                        scoring = true;
                         lastbutton = "";
                         nowbutton = "";
                     }else {
                         lastbutton = "autodrop";
+                        Light2.setPosition(0);
                         pic = 2;
                         nowbutton = "";
                     }
@@ -823,9 +854,14 @@ public class BTCLibrary extends OpMode {
                 if(gripspinny.getPower() == -1){
                     spitting = 2;
                 }
+                follower.breakFollowing();
+                front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 intake_twist_pos = .49;
                 intake_turret_pos = .3;
-                limelight.pipelineSwitch(5);
+                first_read = true;
                 intake_vertical_pos = ready_pose;
                 gripper_pose = open;
                 slideservopose = 0;
@@ -833,12 +869,15 @@ public class BTCLibrary extends OpMode {
                 pic = 1;
                 human_player = 1;
                 lastbutton = "";
+            }else if(nowbutton == "up"){
+                next_pick = true;
             }else if(lastbutton == "") {
                 if(nowbutton == "r2"){
                     far_human_player = 2;
                 }
                 else if (nowbutton == "a") {
                     multipick = 2;
+                    first_multipick = true;
                     limelight.pipelineSwitch(4);
                     pic = 2.5;
                 }
@@ -964,6 +1003,7 @@ public class BTCLibrary extends OpMode {
         twisty.setPosition(twistpose + .028);
 
     }
+    public boolean scoring = false;
 
     //////////////////////////////////////////////////////
 
@@ -991,9 +1031,11 @@ public class BTCLibrary extends OpMode {
 
     //////////////////////////////////////////////////////
     //controls the chassis movement
+
+    public double power_level = 1;
     public void drive(){
         follower.update();
-        if(pic < 2.5 || pic >= 4.5) {
+        if(pic < 2.5 || pic >= 4.5 || manual_picking) {
             Pose poseEstimate = follower.getPose();
             double angle = poseEstimate.getHeading();
             double axial = 0;
@@ -1021,7 +1063,6 @@ public class BTCLibrary extends OpMode {
                 yaw = gamepad1.right_stick_x / (gamepad1.left_trigger + 1);
             }
 
-            double power_level = 1;
             if (gamepad1.ps) {
                 telemetry.addData("Yaw", "Resetting\n");
                 follower.setPose(new Pose(poseEstimate.getX(), poseEstimate.getY(), 0));
@@ -1130,22 +1171,33 @@ public class BTCLibrary extends OpMode {
         if(pic > 1) {
             AuditLight.setPosition(.5);
             if(pic == 2 && turret_correct && positions[0] < 1 && positions[1] < 1 && positions[2] < 1 && pythonOutputs[1] > 0 && (follower.getVelocity().getMagnitude() < 5 || forward != 1)) {
-                if(multipick == 1){
-                    intake_vertical_pos = ready_pose;
-                    gripper_pose = open;
-                }
+                gripper_pose = open;
                 follower.holdPoint(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading()));
                 pic = 2.5;
             } else if (vert_correct && pic == 2.5) {
-                intake_vertical_pos = ready_pose;
-                gripper_pose = open;
-                if(positions[0] >= 1 || positions[1] >=1 || positions[2] >= 1){
+                if(positions[0] >= 1 || positions[1] >= 1 || positions[2] >= 1 || (abs(pythonOutputs[0]) < .5 && abs(pythonOutputs[1]) < 5)){
                     pic = 1;
                     if(multipick > 1){
-                        multipick = 1;
-                        limelight.pipelineSwitch(5);
+                        if(first_multipick){
+                            pic = 2.5;
+                        }else {
+                            follower.breakFollowing();
+                            front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                            front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                            rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                            rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                            multipick = 1;
+                            first_read = true;
+                        }
                     }
                 }else {
+                    if(multipick > 1){
+                        if(picks != 0){
+                            follower.holdPoint(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading()));
+                        }
+                    }
+                    intake_vertical_pos = ready_pose;
+                    first_multipick = false;
                     intake_turret_pos = positions[0];
                     slideservopose = positions[1];
                     if(slideservopose < 0){
@@ -1161,31 +1213,39 @@ public class BTCLibrary extends OpMode {
                     }
                     pic = 4;
                 }
-            }else if(pic == 4 && ((slideservocorrect && turret_correct && twist_correct) || gamepad1.dpad_up || manual_picking || forward == 11)){
+            }else if(pic == 4 && ((slideservocorrect && turret_correct && twist_correct) || next_pick || manual_picking || forward == 11)){
                 intake_vertical_pos = pick_pose;
+                next_pick = false;
                 pic = 4.25;
 
             }else if(pic == 4.25){
-                if(vert_at <= pick_pose + .025){
+                if(vert_at <= pick_pose + .025 || next_pick){
                     gripper_pose = closed;
+                    next_pick = false;
                     pic = 4.4;
                 }
-            }else if(pic == 4.4 && (gripper_correct || gripper_at < .77)){
+            }else if(pic == 4.4 && (gripper_correct || gripper_at < .77 || next_pick)){
                 intake_vertical_pos = drop_pose;
+                next_pick = false;
+                if(picks == 1){
+                    follower.holdPoint(new Pose(follower.getPose().getX() - 2, follower.getPose().getY()));
+                }
                 has_picked = true;
                 pic = 4.5;
             }else if(vert_at > .05 && pic == 4.5){
-                follower.breakFollowing();
-                front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                if(multipick == 1) {
+                    follower.breakFollowing();
+                    front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                }
                 intake_turret_pos = .51;
                 intake_vertical_pos = drop_pose;
                 intake_twist_pos = .77;
                 slideservopose = 0;
                 manual_picking = false;
-
+                Light2.setPosition(1);
                 if(multipick > 1){
                     human_player = 2;
                 }
@@ -1193,10 +1253,9 @@ public class BTCLibrary extends OpMode {
             }
 
 
-        }else{
-            AuditLight.setPosition(0);
         }
     }
+    public boolean next_pick = false;
     public void drop_at_human_player(){
         if(human_player == 2){
             intake_turret_pos = turret_drop + .025;
@@ -1206,7 +1265,11 @@ public class BTCLibrary extends OpMode {
                 intake_vertical_pos += .03;
                 intake_twist_pos = .49;
             }else {
-                intake_twist_pos = .77;
+                if(multipick > 1){
+                    intake_twist_pos = .38;
+                }else {
+                    intake_twist_pos = .77;
+                }
             }
             slideservopose = 0;
             human_player = 3;
@@ -1216,7 +1279,7 @@ public class BTCLibrary extends OpMode {
                     picks = 0;
                     human_player = 1;
                 }else {
-                    intake_vertical_pos = .23;
+                    intake_vertical_pos = .18;
                     intake_turret_pos = .13;
                 }
             }
@@ -1249,6 +1312,10 @@ public class BTCLibrary extends OpMode {
             human_player = 1;
         }
     }
+    public boolean toss(){
+
+        return abs(turret_at - intake_turret_pos) + abs(slideat - slideservopose) < .25 && multipick > 1;
+    }
     public double far_human_player = 1;
     public void far_human_player(){
         if(far_human_player == 2){
@@ -1257,16 +1324,18 @@ public class BTCLibrary extends OpMode {
             intake_twist_pos = .49;
             slideservopose = .6;
             far_human_player = 3;
-        }else if(far_human_player == 3 && turret_correct && slideservocorrect && vert_correct){
+        }else if(far_human_player == 3 && slideservocorrect){
+            power_level = .5;
             gripper_pose = open;
             far_human_player = 4;
-        }else if(far_human_player == 4 && gripper_correct){
+        }else if(far_human_player == 4 && gripper_at > open - .15){
             intake_turret_pos = .25;
             slideservopose = 0;
             intake_vertical_pos = .32;
             intake_twist_pos = .5;
             far_human_player = 5;
         }else if(far_human_player == 5 && turret_correct){
+            power_level = 1;
             intake_vertical_pos = .25;
             far_human_player = 1;
         }
@@ -1302,7 +1371,7 @@ public class BTCLibrary extends OpMode {
     public void feedgreen(){
         if(multipick > 1){
             if(picks == 2){
-                limelight.pipelineSwitch(5);
+                first_read = true;
             }
         }
     }
@@ -1319,6 +1388,20 @@ public class BTCLibrary extends OpMode {
                 button2.lastbutton = "r1";
             }
             spitting = 1;
+        }
+    }
+    public boolean first_read = true;
+    public void first(){
+        if(first_read){
+            double what = side.blue();
+            if(what > 5000){
+                telemetry.addData("Color = ", "Blue");
+                limelight. pipelineSwitch(6);
+            }else{
+                telemetry.addData("Color = ", "Red");
+                limelight.pipelineSwitch(5);
+            }
+            first_read = false;
         }
     }
 
